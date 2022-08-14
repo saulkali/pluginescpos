@@ -1,10 +1,23 @@
-from urllib import request
 from fastapi import FastAPI,Request
+from PIL import Image
 from escpos.printer import File 
 import multiprocessing
 import uvicorn
+import requests
+from fastapi.middleware.cors import CORSMiddleware
+
 app = FastAPI()
 portPath = "/dev/usb/"
+
+origin = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins = origin,
+    allow_credentials = True,
+    allow_methods = ["*"],
+    allow_headers = ["*"]
+)
 
 @app.get("/printers")
 def getPrinters():
@@ -13,7 +26,8 @@ def getPrinters():
     for indexPort in range(0,40):
         try:
             printer = File(f"{portPath}lp{indexPort}")
-            port = portPath+"lp"+indexPort.__str__()
+            printer.close()
+            port = "lp"+indexPort.__str__()
             listPrinters.append(port)
         except:
             continue
@@ -21,7 +35,6 @@ def getPrinters():
         "status":"OK",
         "listPrinter":listPrinters
     }
-
 @app.post("/command/{printerName}")
 async def printTicket(request:Request,printerName:str):
     response = {
@@ -30,26 +43,70 @@ async def printTicket(request:Request,printerName:str):
     }
 
     try:
-        printer = File(portPath+printerName)
-        data = await request.json()
-
-        for item in data["listData"]:
-            if(item["type"] == "text"):
-                print(item["data"])
-            elif(item["type"] == "qr"):
-                print(item["data"])
-    except:
+        printer = File(portPath+printerName)        
+        response["status"] = "OK"
+        response["error"] = ""
+        listData = await request.json()
+        for data in listData:
+            if data["type"] == "text":
+                printer.text(data["data"])
+            elif data["type"] == "qr":
+                printer.qr(data["data"],size=9)
+            elif data["type"] == "img":
+                image = requests.get(data["data"])
+                if image.status_code == 200:
+                    with open("image.png","wb") as img:
+                        img.write(image.content)
+                        imageTemplate = Image.open("image.png")
+                        imageResize = imageTemplate.resize((data["width"],data["height"]))
+                        printer.image(imageResize)
+                else:
+                    imageTemplate = Image.open(data["data"])
+                    imageResize = imageTemplate.resize((data["width"],data["height"]))
+                    printer.image(imageResize)   
+            elif data["type"] == "configure":
+                printer.set(
+                    align = data["align"],
+                    font = data["typeFont"],
+                    bold = data["bold"]
+                )
+            elif data["type"] == "barcode":
+                printer.barcode(data["data"],data["typeCode"],64,3,'','A')
+            elif data["type"] == "open":
+                pins = [27,112,48,0,6]
+                for pin in pins:
+                    try:
+                        printer.cashdraw(pins)
+                        break
+                    except:
+                        continue
+            elif data["type"] == "openpartial":
+                pins = [27,112,0,25,255]
+                for pin in pins:
+                    try:
+                        printer.cashdraw(pin)
+                        break
+                    except:
+                        continue
+        printer.set(align="center",bold=True)
+        printer.text("---------------------\n")
+        printer.text("SAUL BURCIAGA HERNANDEZ\n")
+        printer.text("www.saultech.herokuapp.com\n")
+        printer.text("---------------------\n")
+        printer.cut()
+        printer.close()
+    except Exception as e:
         response["status"] = "ERROR"
-        response["error"] = "Impresora no encontrada"
+        response["error"] = e.__str__()
 
     return response
 
 
 def main(host="127.0.0.1",port = 5656):
-    uvicorn.run("main:app",host = host, port = port,reload=True)
+    uvicorn.run(app,host = host, port = port,log_level='critical')
 
 
 if __name__ == '__main__':
     multiprocessing.freeze_support()
-    print("running instance uvicorn")
+    print("running printering :)")
     main()
