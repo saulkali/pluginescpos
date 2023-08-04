@@ -6,6 +6,19 @@ import uvicorn
 import requests
 from fastapi.middleware.cors import CORSMiddleware
 
+#++++ discomment this code if you have the next error with pyinstaller (fixed issaty error pyinstaller) ++++#
+
+#import sys
+#if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+#    class NullOutput(object):
+#        def write(self, string):
+#            pass
+
+#        def isatty(self):
+#            return False
+#    sys.stdout = NullOutput()
+#    sys.stderr = NullOutput()
+
 app = FastAPI()
 portPath = "/dev/usb/"
 

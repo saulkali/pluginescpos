@@ -1,2 +1,4 @@
-escpos
+python-escpos==2.2.0
 fastapi
+requests
+pywin32
