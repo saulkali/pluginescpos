@@ -1,0 +1,35 @@
+para crear el binario, hay que tener en cuenta de que fastapi no funciona de manera directa 
+con los parametros --noconsole y --windowed, ya que depende de una terminal, para crear un fix de esto
+es necesario agregar el siguiente codigo en el principio del main.py raiz, con esto podras agregar el 
+--noconsole y funcionara el binario fixiando el error de isatty que genera pyinstaller en el binario
+
+#import sys
+#if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+#    class NullOutput(object):
+#        def write(self, string):
+#            pass
+
+#        def isatty(self):
+#            return False
+#    sys.stdout = NullOutput()
+#    sys.stderr = NullOutput()
+
+
+
+### MENSAJE DE ERROR (EJEMPLO) ###
+ File "logging\config.py", line 552, in configure
+  File "logging\config.py", line 664, in configure_formatter
+  File "logging\config.py", line 483, in configure_custom
+  File "uvicorn\logging.py", line 42, in __init__
+AttributeError: 'NoneType' object has no attribute 'isatty'
+
+
+ahora para crear el binario es necesario installar pyinstaller en el entorno virtual de python
+
+(venv) >>> pip install pyinstaller
+
+una vez installado ejecuitamos el siguiente comando
+
+(venv) >>> pyinstaller --onefile --onedir main.py
+
+esperamos a que genere el exe y lo ejecutamos (el exe se encuetnra en la carpeta generada "dist")

@@ -1,0 +1,36 @@
+# breve explicacion
+para desplegar el proyecto es necesario tener instalado python la version 3.9 superior y conocer sobre
+los entornos virtuales de python (en especifico virtualenv pero puedes usar el de tu agrado :D).
+
+una vez installado python pasamos a instalar virtualenv desde la CMD o PowerShell, pero primero 
+actualizamos pip
+
+>>> python -m install --upgrade pip
+>>> python -m install virtualenv
+
+ahora creamos el entorno virtual 
+
+>>> python -m virtualenv venv
+
+se nos va crear una carpeta llamada "venv" para activar el entorno virtual de python es con el siguiente comando
+
+(windows)
+>>> .\venv\Scripts\activate
+
+(linux)
+>>> source venv/bin/activate
+
+(desactivar entorno virtual)
+(venv)>>> deactivate
+
+y para finalizar ahora solo es instalar los requerimients.txt con el siguiente comando
+
+(venv) >>> pip install -r requerimients.txt
+
+
+y listo ya puede ejecutar el main.py :) suerte...
+
+(venv) >>> python main.py
+
+
+
